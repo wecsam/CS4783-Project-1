@@ -96,8 +96,10 @@ allColumnsCorrectDataType(rhs.allColumnsCorrectDataType), allColumnsInRange(rhs.
 allRowsValidWidth(rhs.allRowsValidWidth)
 {}
 int Key::encrypt(char c) const {
+	// Get an iterator to the MessageCharacter in the map.
 	auto mci = charToKeyValues.find(c);
 	if(mci == charToKeyValues.end()){
+		// This character is not in this key, so it cannot be encrypted.
 		return -1;
 	}
 	return mci->second.getRandomCipherValue();
@@ -121,8 +123,5 @@ bool Key::explode(const string& rowstr, vector<string>& result, char comma){
 }
 bool Key::getlineAndExplode(istream& keyfile, vector<string>& result, char comma){
 	string rowstr;
-	if(getline(keyfile, rowstr)){
-		return explode(rowstr, result, comma);
-	}
-	return false;
+	return getline(keyfile, rowstr) && explode(rowstr, result, comma);
 }
