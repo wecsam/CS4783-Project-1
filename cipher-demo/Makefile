@@ -1,14 +1,20 @@
 CC=g++
 CFLAGS=-Wall -Werror -std=c++11
 
-main:
-	$(CC) cipher-demo.cpp -o cipher-demo.o $(CFLAGS)
+%.o: %.cpp MessageCharacter.h Key.h
+	$(CC) $< -c -o $@ $(CFLAGS)
+
+main: cipher-demo.o MessageCharacter.o Key.o
+	$(CC) cipher-demo.o MessageCharacter.o Key.o -o cipher-demo
 
 keygen:
-	$(CC) keygen.cpp -o keygen.o $(CFLAGS)
+	$(CC) keygen.cpp -o keygen $(CFLAGS)
 
 run:
-	./cipher-demo.o
+	./cipher-demo
 
 run-keygen:
-	./keygen.o
+	./keygen
+
+clean:
+	rm *.o keygen cipher-demo
