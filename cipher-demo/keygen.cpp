@@ -1,4 +1,4 @@
-#include <algorithm>    // random_shuffle
+#include <algorithm>    // random_shuffle, sort
 #include <array>
 #include <ctime>        // time
 #include <cstdlib>      // srand
@@ -48,36 +48,37 @@ int main(){
 		cerr << "The output file could not be opened.\n";
 		return 1;
 	}
-	// We want to iterate through FREQUENCIES in random order to generate a random key.
-	// First, generate an array of FREQUENCIES keys.
-	size_t frequenciesKeys[FREQUENCIES_LENGTH];
-	iota(frequenciesKeys, frequenciesKeys + FREQUENCIES_LENGTH, 0);
-	// Now, shuffle the keys. It looks like this is the best method unless there's a random_access_iterator.
+	// Seed the random number generator.
 	srand(unsigned(time(0)));
-	random_shuffle(frequenciesKeys, frequenciesKeys + FREQUENCIES_LENGTH);
-	// Initialize a map from message space characters (column 1 in assignment sheet) to the first of the key values (column 3).
-	// For example, if key['a'] == 5, then the letter A can encrypt to any integer between 5 and 11, inclusive. Recall that
-	// the value in column 2 for A is 7.
-	map<char, int> key;
-	/* Scope for numKeyValues */ {
-		// Carve out the key values (column 3 in assignment sheet) and assign them to message space characters (column 1).
-		int numKeyValues = 0;
-		for(size_t i = 0; i < FREQUENCIES_LENGTH; ++i){
-			key[FREQUENCIES[frequenciesKeys[i]].first] = numKeyValues;
-			numKeyValues += FREQUENCIES[frequenciesKeys[i]].second;
-		}
-		// Show the number of key values. There should be 106 key values, which will be numbered from 0 to 105.
-		cout << "Number of key values: " << numKeyValues << '\n';
-	}
-	// Output a CSV file that represents the key.
-	cout << "Writing key file...\n";
-	keyfile << "English Letter,Average Frequency,Key Values Start,Key Values End\n";
+	// Find the number of key values. There should be 106 key values, which will be numbered from 0 to 105.
+	int numKeyValues = 0;
 	for(size_t i = 0; i < FREQUENCIES_LENGTH; ++i){
-		keyfile << '\'' << FREQUENCIES[i].first << "'," // English Letter
-				<< FREQUENCIES[i].second << ','         // Average Frequency
-				<< key[FREQUENCIES[i].first] << ','     // Key Values Start
-				<< key[FREQUENCIES[i].first] + FREQUENCIES[i].second - 1
-				<< '\n';
+		numKeyValues += FREQUENCIES[i].second;
+	}
+	cout << "Number of key values: " << numKeyValues << '\n';
+	// Create an array that holds the numbers 0 to 105 in random order.
+	int keyValues[numKeyValues];
+	iota(keyValues, keyValues + numKeyValues, 0);
+	random_shuffle(keyValues, keyValues + numKeyValues);
+	// Output a CSV file that represents the key.
+	size_t keyValueIndex = 0;
+	cout << "Writing key file...\n";
+	keyfile << "English Letter,Key Values (Space Delimited)\n";
+	for(size_t i = 0; i < FREQUENCIES_LENGTH; ++i){
+		// In keyValues, indices from keyValueIndex to (keyValueIndex + FREQUENCIES[i].second - 1) inclusive
+		// are key values that shall correspond to this plaintext letter.
+		// Sort the key values that correspond to this plaintext character.
+		sort(keyValues + keyValueIndex, keyValues + keyValueIndex + FREQUENCIES[i].second);
+		// Write the plaintext letter.
+		keyfile << '\'' << FREQUENCIES[i].first << "',";
+		// Write the key values.
+		// Write the first one separately.
+		keyfile << keyValues[keyValueIndex];
+		for(size_t j = keyValueIndex + 1; j < keyValueIndex + FREQUENCIES[i].second; ++j){
+			keyfile << ' ' << keyValues[j];
+		}
+		keyfile << '\n';
+		keyValueIndex += FREQUENCIES[i].second;
 	}
 	cout << "Done.\n";
 	return 0;
