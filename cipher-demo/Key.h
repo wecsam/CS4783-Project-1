@@ -7,11 +7,11 @@
 class Key {
 public:
 	// Pass in an istream that contains a CSV file that holds the key.
-	// The CSV file should have English Letter, Average Frequency, and Key Values Start as columns.
+	// The CSV file should have English Letter and Key Values (Space Delimited) as columns.
 	Key(std::istream&);
 	// This constructor allows you to specify the column headings in the CSV file.
-	// They are, in order: English Letter, Average Frequency, and Key Values Start
-	Key(std::istream&, const std::string&, const std::string&, const std::string&);
+	// They are, in order, English Letter and Key Values (Space Delimited).
+	Key(std::istream&, const std::string&, const std::string&);
 	// This function returns false if any of the internal error flags are set.
 	operator bool() const;
 	// Copy and move constructors

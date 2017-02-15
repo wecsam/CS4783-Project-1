@@ -2,7 +2,7 @@
 #include "Key.h"
 using namespace std;
 
-Key::Key(istream& keyfile, const string& COLUMN_CHAR, const string& COLUMN_FREQ, const string& COLUMN_START){
+Key::Key(istream& keyfile, const string& COLUMN_CHAR, const string& COLUMN_KEY_VALUES){
 	// Check that the key file is ready for reading.
 	if(keyfile){
 		readKeyFileSuccess = true;
@@ -11,8 +11,8 @@ Key::Key(istream& keyfile, const string& COLUMN_CHAR, const string& COLUMN_FREQ,
 		getlineAndExplode(keyfile, rowExploded);
 		const size_t headerRowSize = rowExploded.size();
 		// Find the offsets (from the left-most column) of the three required columns.
-		size_t columnCharOffset, columnFreqOffset, columnStartOffset;
-		columnCharOffset = columnFreqOffset = columnStartOffset = headerRowSize;
+		size_t columnCharOffset, columnKeyValuesOffset;
+		columnCharOffset = columnKeyValuesOffset = headerRowSize;
 		noDuplicateColumnHeadings = true;
 		for(size_t i = 0; i < headerRowSize; ++i){
 			if(rowExploded[i] == COLUMN_CHAR){
@@ -23,16 +23,9 @@ Key::Key(istream& keyfile, const string& COLUMN_CHAR, const string& COLUMN_FREQ,
 					noDuplicateColumnHeadings = false;
 					return;
 				}
-			}else if(rowExploded[i] == COLUMN_FREQ){
-				if(columnFreqOffset == headerRowSize){
-					columnFreqOffset = i;
-				}else{
-					noDuplicateColumnHeadings = false;
-					return;
-				}
-			}else if(rowExploded[i] == COLUMN_START){
-				if(columnStartOffset == headerRowSize){
-					columnStartOffset = i;
+			}else if(rowExploded[i] == COLUMN_KEY_VALUES){
+				if(columnKeyValuesOffset == headerRowSize){
+					columnKeyValuesOffset = i;
 				}else{
 					noDuplicateColumnHeadings = false;
 					return;
@@ -40,7 +33,7 @@ Key::Key(istream& keyfile, const string& COLUMN_CHAR, const string& COLUMN_FREQ,
 			}
 		}
 		// Check that the three required columns are present.
-		if(columnCharOffset < headerRowSize && columnFreqOffset < headerRowSize && columnStartOffset < headerRowSize){
+		if(columnCharOffset < headerRowSize && columnKeyValuesOffset < headerRowSize){
 			allColumnsFound = true;
 			// Finally, we can begin reading the rest of the key file into a map.
 			allRowsValidWidth = true;
@@ -53,22 +46,31 @@ Key::Key(istream& keyfile, const string& COLUMN_CHAR, const string& COLUMN_FREQ,
 					allRowsValidWidth = false;
 					return;
 				}
-				// The start and frequency columns must be converted to int.
-				int start, freq;
-				try{
-					start = stoi(rowExploded[columnStartOffset]); // Requires C++ 2011
-					freq = stoi(rowExploded[columnFreqOffset]);
-				}catch(const invalid_argument& e){
+				// The key values column must be exploded; it is space-delimited.
+				vector<string> keyValuesStr;
+				explode(rowExploded[columnKeyValuesOffset], keyValuesStr, ' ');
+				if(keyValuesStr.size() == 0){
 					allColumnsCorrectDataType = false;
 					return;
-				}catch(const out_of_range& e){
-					allColumnsInRange = false;
-					return;
+				}
+				// Convert the key values from strings to ints.
+				vector<int> keyValues;
+				keyValues.reserve(keyValuesStr.size());
+				for(const string& s : keyValuesStr){
+					try{
+						keyValues.push_back(stoi(s)); // Requires C++ 2011
+					}catch(const invalid_argument& e){
+						allColumnsCorrectDataType = false;
+						return;
+					}catch(const out_of_range& e){
+						allColumnsInRange = false;
+						return;
+					}
 				}
 				// Check that the letter column is really only one character surrounded by single quotes.
 				if(rowExploded[columnCharOffset].length() == 3 && rowExploded[columnCharOffset][0] == '\'' && rowExploded[columnCharOffset][2] == '\''){
 					// All checks passed. Add this row to the map.
-					charToKeyValues.emplace(rowExploded[columnCharOffset][1], MessageCharacter(start, freq));
+					charToKeyValues.emplace(rowExploded[columnCharOffset][1], MessageCharacter(move(keyValues)));
 				}else{
 					allColumnsCorrectDataType = false;
 					return;
@@ -82,7 +84,7 @@ Key::Key(istream& keyfile, const string& COLUMN_CHAR, const string& COLUMN_FREQ,
 		readKeyFileSuccess = false;
 	}
 }
-Key::Key(istream& keyfile) : Key(keyfile, "English Letter", "Average Frequency", "Key Values Start") {}
+Key::Key(istream& keyfile) : Key(keyfile, "English Letter", "Key Values (Space Delimited)") {}
 Key::Key(const Key& rhs)
 : charToKeyValues(rhs.charToKeyValues), readKeyFileSuccess(rhs.readKeyFileSuccess),
 noDuplicateColumnHeadings(rhs.noDuplicateColumnHeadings), allColumnsFound(rhs.allColumnsFound),

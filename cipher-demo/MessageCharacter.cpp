@@ -1,9 +1,11 @@
 #include <cstdlib>
 #include "MessageCharacter.h"
+using namespace std;
 
-MessageCharacter::MessageCharacter(int cipherValueRangeStart, int averageFrequency)
-: cipherValueRangeStart(cipherValueRangeStart), averageFrequency(averageFrequency)
-{}
+MessageCharacter::MessageCharacter(vector<int>&& keyValues) : keyValues(move(keyValues)) {}
+MessageCharacter::MessageCharacter(const MessageCharacter& rhs) : keyValues(rhs.keyValues) {}
+MessageCharacter::MessageCharacter(MessageCharacter&& rhs) : keyValues(move(rhs.keyValues)) {}
+
 int MessageCharacter::getRandomCipherValue() const {
-	return rand() % this->averageFrequency + this->cipherValueRangeStart;
+	return keyValues[rand() % keyValues.size()];
 }
