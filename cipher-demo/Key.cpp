@@ -104,6 +104,8 @@ int Key::encrypt(char c) const {
 		// This character is not in this key, so it cannot be encrypted.
 		return -1;
 	}
+	// The assignment sheet says that the key value will be chosen by an undisclosed scheduling algorithm,
+	// but the best that we have here is a random choice.
 	return mci->second.getRandomCipherValue();
 }
 Key::operator bool() const {
