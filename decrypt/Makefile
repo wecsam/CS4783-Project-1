@@ -1,5 +1,5 @@
 CC=g++
-CFLAGS=-Wall
+CFLAGS=-Wall -Werror -std=c++11
 EXECUTABLE_NAME=Tsai-Pock-decrypt
 
 build:
