@@ -29,3 +29,4 @@
 *.app
 cipher-demo/cipher-demo
 cipher-demo/keygen
+decrypt/bigrams-tester

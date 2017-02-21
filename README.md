@@ -19,3 +19,5 @@ To compile, run `make keygen`. To run, run `make run-keygen`.
 This is the actual program that accomplishes the objective outlined on the assignment sheet.
 
 To compile, run `make`. To run, run `make run`.
+
+There are various test programs in this directory as well. To compile them, run `make tests`.
