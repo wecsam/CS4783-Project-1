@@ -2,7 +2,7 @@
 
 The files in this repository are a work-in-progress of the first project in the 2017 spring semester of CS 4783 Applied Cryptography at the NYU Tandon School of Engineering.
 
-The repository is split into two folders, each of which is explained below.
+The repository is split into three folders, each of which is explained below.
 
 ### cipher-demo
 
@@ -20,4 +20,8 @@ This is the actual program that accomplishes the objective outlined on the assig
 
 To compile, run `make`. To run, run `make run`.
 
-There are various test programs in this directory as well. To compile them, run `make tests`.
+There are various test programs in this folder as well. To compile them, run `make tests`.
+
+### frequencies
+
+This folder contains various Python tools that help us exploit characteristics of the English language to defeat the permutation cipher in the assignment.
