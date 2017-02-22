@@ -32,6 +32,9 @@ def normalize_dict_of_floats(d):
 first_letter = make_a_dict_with_a_key_for_every_letter(make_a_dict_with_a_key_for_every_letter)
 with open(INPUT_FILE, "r") as f:
     for line in f:
+        if len(line) < 2:
+            # Ignore blank lines.
+            continue
         previous_character = ' '
         for current_character in line[:-1] + ' ':
             if current_character in first_letter[previous_character]:
