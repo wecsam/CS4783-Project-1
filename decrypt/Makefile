@@ -1,11 +1,11 @@
 CC=g++
 CFLAGS=-Wall -Werror -std=c++11
-EXECUTABLE_NAME=Tsai-Pock-decrypt
+EXECUTABLE_NAME=Tsai-Poch-decrypt
 
-%.o: %.cpp Bigrams.h
+%.o: %.cpp Bigrams.h 
 	$(CC) $< -c -o $@ $(CFLAGS)
 
-build: main.o
+build: main.o 
 	$(CC) main.o -o $(EXECUTABLE_NAME) $(CFLAGS)
 
 run:

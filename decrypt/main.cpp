@@ -43,7 +43,6 @@ int main(){
 //        cerr << "The provided ciphertext is not L = 500.\n";
 //        return 1;
 //    }
-    
     vector<string> ciphertext = split(input, ',');
 	return 0;
 }
