@@ -19,7 +19,7 @@ public:
 	Key(Key&&);
 	// Pass a char to this function to get an encrypted value. It is assumed that there are no errors (check operator bool).
 	// If a character cannot be encrypted (i.e. the key does not have a key value for it), -1 is returned.
-	int encrypt(char) const;
+	int encrypt(char);
 private:
 	std::map<char, MessageCharacter> charToKeyValues;
 	bool readKeyFileSuccess;

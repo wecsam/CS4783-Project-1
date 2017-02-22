@@ -97,7 +97,7 @@ noDuplicateColumnHeadings(rhs.noDuplicateColumnHeadings), allColumnsFound(rhs.al
 allColumnsCorrectDataType(rhs.allColumnsCorrectDataType), allColumnsInRange(rhs.allColumnsInRange),
 allRowsValidWidth(rhs.allRowsValidWidth)
 {}
-int Key::encrypt(char c) const {
+int Key::encrypt(char c) {
 	// Get an iterator to the MessageCharacter in the map.
 	auto mci = charToKeyValues.find(c);
 	if(mci == charToKeyValues.end()){
@@ -106,7 +106,11 @@ int Key::encrypt(char c) const {
 	}
 	// The assignment sheet says that the key value will be chosen by an undisclosed scheduling algorithm,
 	// but the best that we have here is a random choice.
-	return mci->second.getRandomCipherValue();
+//	return mci->second.getRandomCipherValue();
+    
+    // The key value will be chosen using j mod length(list) as specificied in part one of the assignment
+    // sheet.
+    return mci->second.getNextCipherValue();
 }
 Key::operator bool() const {
 	return readKeyFileSuccess && noDuplicateColumnHeadings && allColumnsFound && allColumnsCorrectDataType && allColumnsInRange && allRowsValidWidth;
