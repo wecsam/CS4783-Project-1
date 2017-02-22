@@ -12,10 +12,10 @@ int main(){
 	if(distribution == Bigrams::PROB_2_GIVEN_1.end()){
 		cerr << "Please use a lowercase letter or a space.\n";
 	}else{
+		cout << "Given that the first character is '" << first << "'...\n";
 		for(const auto& probability : distribution->second){
-			cout << "The probability that '" << probability.first
-				<< "' follows '" << first << "' is " << probability.second
-				<< ".\n";
+			cout << "...the probability of the bigram '" << first << probability.first
+				<< "' is " << probability.second * 100 << "%.\n";
 		}
 	}
 	return 0;
