@@ -6,7 +6,7 @@ int main(){
 	// Prompt the user for a letter or space.
 	char first;
 	cerr << "Enter a lowercase letter or a space: ";
-	cin >> first;
+	cin.get(first);
 	// Check that this letter is in Bigrams::PROB_2_GIVEN_1.
 	auto distribution = Bigrams::PROB_2_GIVEN_1.find(first);
 	if(distribution == Bigrams::PROB_2_GIVEN_1.end()){
