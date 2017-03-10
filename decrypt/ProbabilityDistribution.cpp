@@ -6,7 +6,7 @@
 // Ciphertext A     { Space, A, B, ..., Z }
 // Ciphertext ...   { Space, A, B, ..., Z }
 // Ciphertext Z     { Space, A, B, ..., Z }
-static double probabilityValues [106][27] {
+double probabilityValues [106][27] {
     LetterFrequency,
     LetterFrequency,
     LetterFrequency,
