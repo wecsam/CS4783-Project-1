@@ -1,6 +1,11 @@
 #include "ProbabilityDistribution.h"
 #define LetterFrequency {0.1832, 0.0655, 0.0127, 0.0227, 0.0335, 0.1022, 0.0197, 0.0164, 0.0486, 0.0573, 0.0011, 0.0057, 0.0336, 0.0202, 0.057, 0.062, 0.015, 0.0009, 0.0497, 0.0533, 0.0751, 0.023, 0.0079, 0.0169, 0.0015, 0.0147, 0.0006}
 
+// For each of the 106 rows, the columns are structured as such:
+// Ciphertext Space { Space, A, B, ..., Z }
+// Ciphertext A     { Space, A, B, ..., Z }
+// Ciphertext ...   { Space, A, B, ..., Z }
+// Ciphertext Z     { Space, A, B, ..., Z }
 static double probabilityValues [106][27] {
     LetterFrequency,
     LetterFrequency,
