@@ -31,3 +31,6 @@ cipher-demo/cipher-demo
 cipher-demo/keygen
 decrypt/bigrams-tester
 decrypt/Tsai-Poch-decrypt
+
+# Temporary files
+~$*
