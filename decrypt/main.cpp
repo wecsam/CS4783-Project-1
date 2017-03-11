@@ -6,8 +6,9 @@
 #include <string>
 #include <sstream>
 #include <vector>
+#include "constants.h"
 #include "PlaintextDictionary.h"
-#include "ProbabilityDistribution.h"
+//#include "ProbabilityDistribution.h"
 //#define MAX_EXECUTION_SECONDS 0 // Set to 0 to disable passes.
 #define REVERSE_KEY_FILENAME ".Tsai-Pock-key.bin"
 using namespace std;
@@ -69,15 +70,15 @@ int main(){
 	
 	// Split input by the commas and convert to int.
     vector<int> ciphertext;
-	ciphertext.reserve(500);
+	ciphertext.reserve(MESSAGE_LENGTH);
 	if(!integerCsvToVector(input, ciphertext)){
 		cerr << "There were characters other than numbers and commas, or a stringstream could not be initialized.\n";
 		return 2;
 	}
     
-    // Verify that there are 500 encrypted characters
-    if(ciphertext.size() != 500) {
-        cerr << "The provided ciphertext is not L = 500.\n";
+    // Verify that there are MESSAGE_LENGTH encrypted characters
+    if(ciphertext.size() != MESSAGE_LENGTH) {
+        cerr << "The provided ciphertext is not L = " << MESSAGE_LENGTH << ".\n";
         return 1;
     }
 	

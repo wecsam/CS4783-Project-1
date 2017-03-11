@@ -1,8 +1,9 @@
 #include "Plaintext.h"
+#include "constants.h"
 using namespace std;
 Plaintext::Plaintext(string&& plaintext, map<char, vector<size_t>>&& positionsWithEqualValues)
 : plaintext(move(plaintext)), positionsWithEqualValues(move(positionsWithEqualValues)) {
-	valid = (plaintext.size() == 500 && positionsWithEqualValues.size() >= 2);
+	valid = (plaintext.size() == MESSAGE_LENGTH && positionsWithEqualValues.size() >= 2);
 }
 bool Plaintext::isValid() const {
 	return valid;
