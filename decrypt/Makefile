@@ -17,9 +17,10 @@ run:
 	@./$(EXECUTABLE_NAME)
 
 clean:
-	-rm $(EXECUTABLE_NAME)
-	-rm main.o
-	$(foreach part, $(PARTS), rm $(part).o; )
+	test -f $(EXECUTABLE_NAME) && rm $(EXECUTABLE_NAME); true
+	test -f main.o && rm main.o; true
+	test -f .Tsai-Pock-key.bin && rm .Tsai-Pock-key.bin; true
+	$(foreach part,$(PARTS),test -f $(part).o && rm $(part).o;) true
 
 tests: Bigrams.o
 	$(CC) Bigrams.o bigrams-tester.cpp -o bigrams-tester $(CFLAGS)
