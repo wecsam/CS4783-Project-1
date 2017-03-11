@@ -27,6 +27,9 @@ public:
 	// Note: you should call isValid() first. If isValid() is false, then this function exhibits
 	// undefined behavior.
 	bool hasEqualValuesInTheRightPlaces(const std::vector<int>& ciphertext) const;
+	// Returns the character in the unencrypted at position p. It is assumed that p < 500, the length of the
+	// plaintext.
+	char charAt(std::size_t p) const;
 private:
 	bool valid;
 	// The unencrypted plaintext

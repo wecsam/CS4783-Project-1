@@ -21,6 +21,9 @@ bool Plaintext::hasEqualValuesInTheRightPlaces(const vector<int>& ciphertext) co
 	}
 	return true;
 }
+char Plaintext::charAt(size_t p) const {
+	return plaintext[p];
+}
 ostream& operator<<(ostream& lhs, const Plaintext& rhs){
 	lhs << rhs.plaintext;
 	return lhs;
