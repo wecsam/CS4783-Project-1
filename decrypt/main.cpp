@@ -38,10 +38,11 @@ bool integerCsvToVector(const string& rowstr, vector<int>& result){
 // Takes a plaintext/ciphertext pair and derives a reverse key
 // All of the ciphertext values must be in the valid range from 0 to NUM_CIPHERTEXT_VALUES - 1.
 // reverseKey must be a char array of length NUM_CIPHERTEXT_VALUES.
+// Ciphertext values that don't appear in this ciphertext will be left as a null character (\0).
 bool reverseKeyFromPlaintextCipherText(const Plaintext& plaintext, const vector<int>& ciphertext, char* reverseKey){
 	// We have already verified that all of the ciphertext values are
 	// between 0 and NUM_CIPHERTEXT_VALUES - 1, inclusive.
-	for(size_t i = 0; i < ciphertext.size(); ++i){
+	for(size_t i = 0; i < MESSAGE_LENGTH; ++i){
 		if(reverseKey[ciphertext[i]] == '\0'){
 			// This ciphertext value has not appeared yet in the ciphertext.
 			// Save the corresponding plaintext in the reverse key.
@@ -54,7 +55,6 @@ bool reverseKeyFromPlaintextCipherText(const Plaintext& plaintext, const vector<
 			return false;
 		}
 	}
-	// TODO: Handle ciphertext values that don't appear in this ciphertext.
 	return true;
 }
 
@@ -125,8 +125,47 @@ int main(){
 			cerr << "The key could not be derived from this plaintext.\n";
 		}
 	}else{
-		cerr << "None of the known plaintexts matched. This must be Part 2 of the project.\n";
-		cerr << "We haven't developed this part of the project yet, so... yeah.\n";
+		// None of the known plaintexts matched. This must be Part 2 of the project.
+		// Try to read the reverse key from the file.
+		ifstream reverseKeyFile(REVERSE_KEY_FILENAME);
+		if(reverseKeyFile){
+			// Get length of reverse key file.
+			reverseKeyFile.seekg(0, ios_base::end);
+			streampos reverseKeyFileSize = reverseKeyFile.tellg();
+			reverseKeyFile.seekg(0, ios_base::beg);
+			if(reverseKeyFileSize == NUM_CIPHERTEXT_VALUES){
+				// Read the file into a char array.
+				char reverseKey[NUM_CIPHERTEXT_VALUES];
+				reverseKeyFile.read(reverseKey, NUM_CIPHERTEXT_VALUES);
+				// Decrypt all of the known values in the ciphertext. Unknown values are denoted in the key as \0.
+				char plaintext[MESSAGE_LENGTH];
+				vector<size_t> unknownPositions;
+				for(size_t i = 0; i < MESSAGE_LENGTH; ++i){
+					if(reverseKey[ciphertext[i]]){
+						plaintext[i] = reverseKey[ciphertext[i]];
+					}else{
+						plaintext[i] = '\0';
+						unknownPositions.push_back(i);
+					}
+				}
+				// Now try to figure out ciphertext values whose plaintext letters were unknown.
+				for(size_t position : unknownPositions){
+					// TODO
+					cerr << "Unknown position: " << position << ", ciphertext=" << ciphertext[position] << "\n";
+				}
+				// Print out our best guess.
+				cerr << "My plaintext guess is: ";
+				cout.write(plaintext, MESSAGE_LENGTH);
+				cout << endl;
+			}else{
+				cerr << "The files from part 1 are corrupted. Run part 1 again.\n";
+				return 5;
+			}
+		}else{
+			cerr << "It looks like you're trying to run part 2 of the project,\n"
+				<< "but none of the files from part 1 are here.\n";
+			return 4;
+		}
 	}
 	
 	/*
@@ -143,7 +182,7 @@ int main(){
 	int numIterations = 0;
 	do {
 		++numIterations;
-		for(size_t i = 1; i < ciphertext.size(); ++i){
+		for(size_t i = 1; i < MESSAGE_LENGTH; ++i){
 			*//*if(occurrences[ciphertext[i]] >= 11){
 				// If this ciphertext values occurs more than 11 times out of 500, it's almost certainly the letter c.
 				probabilityValues_setPlaintext(ciphertext[i], 3, 0.9999);
