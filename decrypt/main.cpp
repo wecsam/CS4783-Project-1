@@ -58,6 +58,25 @@ bool reverseKeyFromPlaintextCipherText(const Plaintext& plaintext, const vector<
 	return true;
 }
 
+// Returns the length of the istream and also seeks the istream back to the beginning.
+streampos istreamGetLengthAndSeekToBeginning(istream& is){
+	is.seekg(0, ios_base::end);
+	streampos filesize = is.tellg();
+	is.seekg(0, ios_base::beg);
+	return filesize;
+}
+
+// Whether two reverse keys match. If either key has a null byte in a position, that position is ignored.
+// It is assumed that keyA and keyB are both of length NUM_CIPHERTEXT_VALUES.
+bool reverseKeysMatch(const char* keyA, const char* keyB){
+	for(size_t i = 0; i < NUM_CIPHERTEXT_VALUES; ++i){
+		if(keyA[i] && keyB[i] && keyA[i] != keyB[i]){
+			return false;
+		}
+	}
+	return true;
+}
+
 int main(){
 	// We'll use stdout for the actual plaintext guess and stderr for any other messages.
 	
@@ -113,6 +132,23 @@ int main(){
 		// plaintext letter that is represented by ciphertext value c.
 		char reverseKey[NUM_CIPHERTEXT_VALUES] = {0};
 		if(reverseKeyFromPlaintextCipherText(spring2017plaintexts[indexOfMatchingPlaintext], ciphertext, reverseKey)){
+			// See if there is already a saved reverse key.
+			ifstream reverseKeyFileExisting(REVERSE_KEY_FILENAME);
+			if(reverseKeyFileExisting && (istreamGetLengthAndSeekToBeginning(reverseKeyFileExisting) == NUM_CIPHERTEXT_VALUES)){
+				// There is a saved reverse key. Let's see if it matches this one.
+				// Read the saved reverse key into memory.
+				char reverseKeyExisting[NUM_CIPHERTEXT_VALUES];
+				reverseKeyFileExisting.read(reverseKeyExisting, NUM_CIPHERTEXT_VALUES);
+				reverseKeyFileExisting.close();
+				if(reverseKeysMatch(reverseKey, reverseKeyExisting)){
+					// They match! Replace unknown values in this key with the values in the existing key.
+					for(size_t i = 0; i < NUM_CIPHERTEXT_VALUES; ++i){
+						if(!reverseKey[i]){
+							reverseKey[i] = reverseKeyExisting[i];
+						}
+					}
+				}
+			}
 			// Save the reverse key as a file.
 			ofstream reverseKeyFile(REVERSE_KEY_FILENAME);
 			if(reverseKeyFile){
@@ -129,14 +165,11 @@ int main(){
 		// Try to read the reverse key from the file.
 		ifstream reverseKeyFile(REVERSE_KEY_FILENAME);
 		if(reverseKeyFile){
-			// Get length of reverse key file.
-			reverseKeyFile.seekg(0, ios_base::end);
-			streampos reverseKeyFileSize = reverseKeyFile.tellg();
-			reverseKeyFile.seekg(0, ios_base::beg);
-			if(reverseKeyFileSize == NUM_CIPHERTEXT_VALUES){
+			if(istreamGetLengthAndSeekToBeginning(reverseKeyFile) == NUM_CIPHERTEXT_VALUES){
 				// Read the file into a char array.
 				char reverseKey[NUM_CIPHERTEXT_VALUES];
 				reverseKeyFile.read(reverseKey, NUM_CIPHERTEXT_VALUES);
+				reverseKeyFile.close();
 				// Decrypt all of the known values in the ciphertext. Unknown values are denoted in the key as \0.
 				char plaintext[MESSAGE_LENGTH];
 				vector<size_t> unknownPositions;
