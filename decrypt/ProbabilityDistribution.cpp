@@ -1,7 +1,6 @@
 #include "ProbabilityDistribution.h"
 #include "Bigrams.h"
 #define LetterFrequency {0.1832, 0.0655, 0.0127, 0.0227, 0.0335, 0.1022, 0.0197, 0.0164, 0.0486, 0.0573, 0.0011, 0.0057, 0.0336, 0.0202, 0.057, 0.062, 0.015, 0.0009, 0.0497, 0.0533, 0.0751, 0.023, 0.0079, 0.0169, 0.0015, 0.0147, 0.0006}
-#define LETTERS " abcdefghijklmnopqrstuvwxyz"
 
 // Let probabilityValues[x][y] be the probability that ciphertext value x is plaintext letter y.
 // For each of the 106 rows, the columns are structured as such:
@@ -133,14 +132,17 @@ double probabilityValues [NUM_CIPHERTEXT_VALUES][NUM_LETTERS] {
 	This is an internal function. Don't put it in the header.
 	TODO: Maybe we should just make this whole file class with all static members and methods.
 */
-void probabilityValues_influence(int currCipherValue, double* aelpsl, double aelpsl_maximum, double influence){
+void probabilityValues_influence(int currCipherValue, const double* aelpsl, double influence){
 	// Use the probability distribution of the current letter to influence the probability distribution
 	// of what the current ciphertext value represents in plaintext.
 	for(size_t currLetter = 0; currLetter < NUM_LETTERS; ++currLetter){
+		/*std::cerr << "currCipherValue=" << currCipherValue << " influence=" << influence
+			<< " probabilityValues[currCipherValue][currLetter]=" << probabilityValues[currCipherValue][currLetter]
+			<< " aelpsl[currLetter]=" << aelpsl[currLetter];*/
 		// The greater the influence, the more that the new distribution will affect the existing one.
 		probabilityValues[currCipherValue][currLetter] = (1.0 - influence) * probabilityValues[currCipherValue][currLetter] +
-		// We divide by maximum to normalize aelpsl to a maximum of 1.
-			influence * (aelpsl[currLetter] / aelpsl_maximum);
+			influence * aelpsl[currLetter];
+		//std::cerr << " Result=" << probabilityValues[currCipherValue][currLetter] << '\n';
 	}
 }
 /*
@@ -150,10 +152,8 @@ void probabilityValues_influence(int currCipherValue, double* aelpsl, double ael
 bool probabilityValues_influenceByPreviousCiphertext(int prevCipherValue, int currCipherValue, double influence){
 	// Find the weighted average probability of bigrams that end in this letter, where the weight is
 	// the probability that the previous ciphertext value is the first letter in the bigram.
-	double aelpsl[NUM_LETTERS];
-	double maximum = 0.0;
+	double aelpsl[NUM_LETTERS] = {0.0};
 	for(size_t currLetter = 0; currLetter < NUM_LETTERS; ++currLetter){
-		aelpsl[currLetter] = 0.0;
 		for(size_t prevLetter = 0; prevLetter < NUM_LETTERS; ++prevLetter){
 			// Because Bigrams::PROB_2_GIVEN_1 is const, we use the find function.
 			// We also use the LETTERS[prevLetter] syntax to convert from an index of the letter to the actual letter.
@@ -170,15 +170,8 @@ bool probabilityValues_influenceByPreviousCiphertext(int prevCipherValue, int cu
 			}
 			aelpsl[currLetter] += probabilityValues[prevCipherValue][prevLetter] * bigramSecondLetter->second;
 		}
-		// Update the maximum value. We'll need it below.
-		if(aelpsl[currLetter] > maximum){
-			maximum = aelpsl[currLetter];
-		}
 	}
-	if(maximum <= 0.0){
-		return false;
-	}
-	probabilityValues_influence(currCipherValue, aelpsl, maximum, influence);
+	probabilityValues_influence(currCipherValue, aelpsl, influence);
 	return true;
 }
 /*
@@ -198,8 +191,36 @@ bool probabilityValues_influenceByPreviousPlaintext(size_t prevPlaintextValue, i
 		}
 		aelpsl[currLetter] = bigramSecondLetter->second;
 	}
-	probabilityValues_influence(currCipherValue, aelpsl, 1.0, influence);
+	probabilityValues_influence(currCipherValue, aelpsl, influence);
 	return true;
+}
+/*
+	If you're really sure about the current plaintext letter, then use this function.
+	For example, if you're 95% sure that ciphertext 87 is plaintext 'c', then call
+	probabilityValues_setPlaintext(87, 'c', 0.95).
+*/
+void probabilityValues_setPlaintext(int currCipherValue, size_t currPlaintextValue, double confidence){
+	// Find maximum value except currPlaintextValue's value.
+	double maximumExceptCurrPlaintext = 0.0;
+	for(size_t currLetter = 0; currLetter < currPlaintextValue; ++currLetter){
+		if(maximumExceptCurrPlaintext < probabilityValues[currCipherValue][currLetter]){
+			maximumExceptCurrPlaintext = probabilityValues[currCipherValue][currLetter];
+		}
+	}
+	for(size_t currLetter = currPlaintextValue + 1; currLetter < NUM_LETTERS; ++currLetter){
+		if(maximumExceptCurrPlaintext < probabilityValues[currCipherValue][currLetter]){
+			maximumExceptCurrPlaintext = probabilityValues[currCipherValue][currLetter];
+		}
+	}
+	// Normalize the values other than currPlaintextValue's value to (1 - confidence).
+	for(size_t currLetter = 0; currLetter < currPlaintextValue; ++currLetter){
+		probabilityValues[currCipherValue][currLetter] = probabilityValues[currCipherValue][currLetter] / maximumExceptCurrPlaintext * (1 - confidence);
+	}
+	for(size_t currLetter = currPlaintextValue + 1; currLetter < NUM_LETTERS; ++currLetter){
+		probabilityValues[currCipherValue][currLetter] = probabilityValues[currCipherValue][currLetter] / maximumExceptCurrPlaintext * (1 - confidence);
+	}
+	// Set currPlaintextValue's value to confidence.
+	probabilityValues[currCipherValue][currPlaintextValue] = confidence;
 }
 /*
 	Use this function to write probabilityValues to an ostream in CSV format.
