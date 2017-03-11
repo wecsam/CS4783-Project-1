@@ -1,5 +1,5 @@
 CC=g++
-CFLAGS=-Wall -Werror -std=c++11
+CFLAGS=-Wall -Werror -std=c++11 -g -fvar-tracking
 EXECUTABLE_NAME=Tsai-Poch-decrypt
 PARTS=\
 	Bigrams\
@@ -12,7 +12,7 @@ build: $(foreach part, $(PARTS), $(part).o ) main.o
 	$(CC) $(foreach part, $(PARTS), $(part).o ) main.o -o $(EXECUTABLE_NAME) $(CFLAGS)
 
 run:
-	./$(EXECUTABLE_NAME)
+	@./$(EXECUTABLE_NAME)
 
 clean:
 	-rm $(EXECUTABLE_NAME)
