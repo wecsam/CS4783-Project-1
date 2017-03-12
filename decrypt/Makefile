@@ -25,3 +25,6 @@ clean:
 
 tests: Bigrams.o
 	$(CC) Bigrams.o bigrams-tester.cpp -o bigrams-tester $(CFLAGS)
+
+random-ciphertext:
+	@(cd ../frequencies; ./random_message.py) | (cd ../cipher-demo/; ./cipher-demo 2>/dev/null)
