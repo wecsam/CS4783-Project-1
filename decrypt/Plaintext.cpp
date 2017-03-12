@@ -1,7 +1,7 @@
 #include "Plaintext.h"
 #include "constants.h"
 using namespace std;
-Plaintext::Plaintext(string&& plaintext, map<char, vector<size_t>>&& positionsWithEqualValues)
+Plaintext::Plaintext(string&& plaintext, unordered_map<char, vector<size_t>>&& positionsWithEqualValues)
 : plaintext(move(plaintext)), positionsWithEqualValues(move(positionsWithEqualValues)) {
 	valid = (plaintext.size() == MESSAGE_LENGTH && positionsWithEqualValues.size() >= 2);
 }
