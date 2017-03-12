@@ -3,6 +3,7 @@ CFLAGS=-Wall -Werror -std=c++11 -g -fvar-tracking
 EXECUTABLE_NAME=Tsai-Poch-decrypt
 PARTS=\
 	Bigrams\
+	EnglishWords\
 	Plaintext\
 	PlaintextDictionary\
 	ProbabilityDistribution\

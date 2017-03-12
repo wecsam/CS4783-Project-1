@@ -7,6 +7,7 @@
 #include <sstream>
 #include <vector>
 #include "constants.h"
+#include "EnglishWords.h"
 #include "PlaintextDictionary.h"
 //#include "ProbabilityDistribution.h"
 //#define MAX_EXECUTION_SECONDS 0 // Set to 0 to disable passes.
@@ -183,8 +184,23 @@ int main(){
 				}
 				// Now try to figure out ciphertext values whose plaintext letters were unknown.
 				for(size_t position : unknownPositions){
-					// TODO
-					cerr << "Unknown position: " << position << ", ciphertext=" << ciphertext[position] << "\n";
+					cerr << "Guessing position " << position << ", ciphertext=" << ciphertext[position] << "\n";
+					// The goal is to find a matching English word based on the surrounding known letters.
+					// TODO: handle when the unknown ciphertext value is a space
+					// First, find the start and end of the current word.
+					size_t wordStart, wordEnd;
+					for(wordStart = position; wordStart > 0; --wordStart){
+						if(plaintext[wordStart - 1] == ' '){
+							break;
+						}
+					}
+					for(wordEnd = position + 1; wordEnd < MESSAGE_LENGTH; ++wordEnd){
+						if(plaintext[wordEnd] == ' '){
+							break;
+						}
+					}
+					// Search the list of English words for a matching word.
+					
 				}
 				// Print out our best guess.
 				cerr << "My plaintext guess is: ";
