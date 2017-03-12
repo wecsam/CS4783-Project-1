@@ -2,6 +2,7 @@ CC=g++
 CFLAGS=-Wall -Werror -std=c++11 -O3
 EXECUTABLE_NAME=Tsai-Poch-decrypt
 PARTS=\
+	AverageFrequency\
 	EnglishWords\
 	Plaintext\
 	PlaintextDictionary\
