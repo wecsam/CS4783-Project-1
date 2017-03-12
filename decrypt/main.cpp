@@ -112,12 +112,9 @@ int main(){
         return 1;
     }
 	
-	// Count how many times each ciphertext value occurs.
-	int occurrences[NUM_CIPHERTEXT_VALUES] = {0};
+	// Check that all of the ciphertext values are between 0 and NUM_CIPHERTEXT_VALUES - 1, inclusive.
 	for(int c : ciphertext){
-		if(0 <= c && c < NUM_CIPHERTEXT_VALUES){
-			++occurrences[c];
-		}else{
+		if(!(0 <= c && c < NUM_CIPHERTEXT_VALUES)){
 			cerr << "The ciphertext value " << c << " is not between 0 and " << (NUM_CIPHERTEXT_VALUES - 1) << ".\n";
 			return 3;
 		}
@@ -208,7 +205,6 @@ int main(){
 						}
 						cerr << "Guessing position " << position << ", ciphertext=" << ciphertext[position] << "\n";
 						// The goal is to find a matching English word based on the surrounding known letters.
-						// TODO: handle when the unknown ciphertext value is a space
 						// First, find the start and end of the current word.
 						size_t wordStart;
 						for(wordStart = position; wordStart > 0; --wordStart){
@@ -216,28 +212,44 @@ int main(){
 								break;
 							}
 						}
-						for(wordEnd = position + 1; wordEnd < MESSAGE_LENGTH; ++wordEnd){
+						for(wordEnd = position + 1; wordEnd < (MESSAGE_LENGTH - 1); ++wordEnd){
 							if(plaintext[wordEnd] == ' '){
 								break;
 							}
 						}
-						size_t wordSize = wordEnd - wordStart;
+						size_t wordSize = wordEnd - wordStart, firstContiguousKnownSize = position - wordStart;
 						// Search the list of English words for a matching word.
 						vector<size_t> englishWordMatches;
+						int numIndicationsThatThisIsASpace = 0;
 						for(size_t i = 0; i < EnglishWords.size(); ++i){
-							// Check that this English word and the unknown word are the same size.
 							if(wordSize == EnglishWordLengths[i]){
-								// Check that all of the known characters match.
+								// This English word and the unknown word are the same size.
+								// Check whether all of the known characters match.
 								if(buffersMatchExceptUnknowns(wordSize, plaintext + wordStart, EnglishWords[i])){
+									// They match.
 									englishWordMatches.push_back(i);
+								}
+							}else if(firstContiguousKnownSize == EnglishWordLengths[i]){
+								// The number of letters after plaintext[wordStart] that are known
+								// is equal to the number of letters in this English word.
+								// Check whether these known letters are a word. If they are, then
+								// this unknown character is probably a space.
+								if(equal(plaintext + wordStart, plaintext + position, EnglishWords[i])){
+									++numIndicationsThatThisIsASpace;
 								}
 							}
 						}
-						// If at least match was found, use the first one.
-						// TODO: possibly use one of the other ones
+						// If at least one match was found, use the first one.
+						// TODO: change englishWordMatches to a priority_queue with the longest match first and
+						// TODO: include English words that only match the beginning of plaintext[wordStart]
 						if(englishWordMatches.size()){
 							// Overwrite this word within the plaintext with the full English word.
 							memcpy(plaintext + wordStart, EnglishWords[englishWordMatches[0]], wordSize);
+						}else if(numIndicationsThatThisIsASpace){
+							// This unknown position probably is supposed to contain a space.
+							// Let's make it so.
+							plaintext[position] = ' ';
+							wordEnd = position;
 						}else{
 							// This is not a known English word. Replace each of the unknown characters with 'e'.
 							cerr << "This word is not a known English word: ";
