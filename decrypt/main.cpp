@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cstring>
 #include <ctime>
 #include <fstream>
 #include <iostream>
@@ -72,6 +73,17 @@ streampos istreamGetLengthAndSeekToBeginning(istream& is){
 bool reverseKeysMatch(const char* keyA, const char* keyB){
 	for(size_t i = 0; i < NUM_CIPHERTEXT_VALUES; ++i){
 		if(keyA[i] && keyB[i] && keyA[i] != keyB[i]){
+			return false;
+		}
+	}
+	return true;
+}
+
+// Whether two buffers match, except in positions where strA has a null byte.
+// wordSize is the number of bytes to compare. Both buffers must be at least this length.
+bool buffersMatchExceptUnknowns(const size_t wordSize, const char* strA, const char* strB){
+	for(size_t i = 0; i < wordSize; ++i){
+		if(strA[i] && strA[i] != strB[i]){
 			return false;
 		}
 	}
@@ -183,24 +195,65 @@ int main(){
 					}
 				}
 				// Now try to figure out ciphertext values whose plaintext letters were unknown.
-				for(size_t position : unknownPositions){
-					cerr << "Guessing position " << position << ", ciphertext=" << ciphertext[position] << "\n";
-					// The goal is to find a matching English word based on the surrounding known letters.
-					// TODO: handle when the unknown ciphertext value is a space
-					// First, find the start and end of the current word.
-					size_t wordStart, wordEnd;
-					for(wordStart = position; wordStart > 0; --wordStart){
-						if(plaintext[wordStart - 1] == ' '){
-							break;
+				if(unknownPositions.size()){
+					// Pre-compute the result of strlen for all of the English words.
+					vector<size_t> EnglishWordLengths;
+					EnglishWordLengths.reserve(EnglishWords.size());
+					for(const char* s : EnglishWords){
+						EnglishWordLengths.push_back(strlen(s));
+					}
+					size_t wordEnd = 0;
+					for(size_t position : unknownPositions){
+						// Skip this position if it was in the same word as the last position.
+						if(position < wordEnd){
+							continue;
+						}
+						cerr << "Guessing position " << position << ", ciphertext=" << ciphertext[position] << "\n";
+						// The goal is to find a matching English word based on the surrounding known letters.
+						// TODO: handle when the unknown ciphertext value is a space
+						// First, find the start and end of the current word.
+						size_t wordStart;
+						for(wordStart = position; wordStart > 0; --wordStart){
+							if(plaintext[wordStart - 1] == ' '){
+								break;
+							}
+						}
+						for(wordEnd = position + 1; wordEnd < MESSAGE_LENGTH; ++wordEnd){
+							if(plaintext[wordEnd] == ' '){
+								break;
+							}
+						}
+						size_t wordSize = wordEnd - wordStart;
+						// Search the list of English words for a matching word.
+						vector<size_t> englishWordMatches;
+						for(size_t i = 0; i < EnglishWords.size(); ++i){
+							// Check that this English word and the unknown word are the same size.
+							if(wordSize == EnglishWordLengths[i]){
+								// Check that all of the known characters match.
+								if(buffersMatchExceptUnknowns(wordSize, plaintext + wordStart, EnglishWords[i])){
+									englishWordMatches.push_back(i);
+								}
+							}
+						}
+						// If at least match was found, use the first one.
+						// TODO: possibly use one of the other ones
+						if(englishWordMatches.size()){
+							// Overwrite this word within the plaintext with the full English word.
+							memcpy(plaintext + wordStart, EnglishWords[englishWordMatches[0]], wordSize);
+						}else{
+							// This is not a known English word. Replace each of the unknown characters with 'e'.
+							cerr << "This word is not a known English word: ";
+							for(size_t i = 0; i < wordSize; ++i){
+								if(plaintext[i]){
+									cerr << plaintext[i];
+								}else{
+									cerr << '?';
+									plaintext[i] = 'e';
+								}
+							}
+							cerr << endl;
 						}
 					}
-					for(wordEnd = position + 1; wordEnd < MESSAGE_LENGTH; ++wordEnd){
-						if(plaintext[wordEnd] == ' '){
-							break;
-						}
-					}
-					// Search the list of English words for a matching word.
-					
 				}
 				// Print out our best guess.
 				cerr << "My plaintext guess is: ";
