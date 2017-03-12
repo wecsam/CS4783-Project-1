@@ -6,8 +6,10 @@
 #include <stdexcept>
 #include <string>
 #include <sstream>
+#include <unordered_set>
 #include <vector>
 #include "constants.h"
+#include "AverageFrequency.h"
 #include "EnglishWords.h"
 #include "PlaintextDictionary.h"
 #define REVERSE_KEY_FILENAME ".Tsai-Pock-key.bin"
@@ -79,13 +81,15 @@ bool reverseKeysMatch(const char* keyA, const char* keyB){
 
 // Whether two buffers match, except in positions where strA has a null byte.
 // wordSize is the number of bytes to compare. Both buffers must be at least this length.
-bool buffersMatchExceptUnknowns(const size_t wordSize, const char* strA, const char* strB){
+// The return value is the first position the buffers do not match. If the buffers match
+// all the way to wordSize, then the return value is wordSize.
+size_t buffersMatchExceptUnknowns(const size_t wordSize, const char* strA, const char* strB){
 	for(size_t i = 0; i < wordSize; ++i){
 		if(strA[i] && strA[i] != strB[i]){
-			return false;
+			return i;
 		}
 	}
-	return true;
+	return wordSize;
 }
 
 int main(){
@@ -197,13 +201,41 @@ int main(){
 					for(const char* s : EnglishWords){
 						EnglishWordLengths.push_back(strlen(s));
 					}
+					// Compute a set of letters whose key values have not been exhausted (i.e. it
+					// might be the plaintext letter behind an unknown ciphertext value).
+					unordered_set<char> possibleLetters;
+					{
+						// Get the number of ciphertext values that each English letter is given.
+						// Decrement the number of unknown ciphertext values for each ciphertext
+						// value that is known.
+						auto expectedUnknownCiphertextValues = AverageFrequency();
+						for(size_t i = 0; i < NUM_CIPHERTEXT_VALUES; ++i){
+							if(reverseKey[i]){
+								--expectedUnknownCiphertextValues[reverseKey[i]];
+							}
+						}
+						// If a letter still has unknown ciphertext values, then add it to the set.
+						for(const auto& p : expectedUnknownCiphertextValues){
+							if(p.second > 0){
+								possibleLetters.emplace(p.first);
+							}else if(p.second < 0){
+								cerr << "Fatal error: retrieved key has too many of '" << p.first << "'!\n";
+								return 7;
+							}
+						}
+					}
+					// Sanity check: if unknownPositions.size() > 0, then possibleLetters.size() must also be > 0.
+					if(!possibleLetters.size()){
+						cerr << "Fatal error: inconsistency in retrieved key!\n";
+						return 6;
+					}
+					// Analyze each unknown letter.
 					size_t wordEnd = 0;
 					for(size_t position : unknownPositions){
 						// Skip this position if it was in the same word as the last position.
 						if(position < wordEnd){
 							continue;
 						}
-						cerr << "Guessing position " << position << ", ciphertext=" << ciphertext[position] << "\n";
 						// The goal is to find a matching English word based on the surrounding known letters.
 						// First, find the start and end of the current word.
 						size_t wordStart;
@@ -219,17 +251,26 @@ int main(){
 						}
 						size_t wordSize = wordEnd - wordStart, firstContiguousKnownSize = position - wordStart;
 						// Search the list of English words for a matching word.
-						vector<size_t> englishWordMatches;
+						size_t englishWordMatch, englishWordMatchSizeMax = 0;
 						int numIndicationsThatThisIsASpace = 0;
 						for(size_t i = 0; i < EnglishWords.size(); ++i){
-							if(wordSize == EnglishWordLengths[i]){
-								// This English word and the unknown word are the same size.
-								// Check whether all of the known characters match.
-								if(buffersMatchExceptUnknowns(wordSize, plaintext + wordStart, EnglishWords[i])){
-									// They match.
-									englishWordMatches.push_back(i);
+							if(firstContiguousKnownSize < EnglishWordLengths[i] && EnglishWordLengths[i] <= wordSize){
+								// This English word is long enough potentially to reveal the plaintext
+								// letter of this position, and this English word is shorter than or as
+								// short as the unknown word.
+								// Check whether the letter in the English word that lines up with this
+								// unknown position is one of the letters that are missing key values.
+								if(possibleLetters.find(EnglishWords[i][firstContiguousKnownSize]) != possibleLetters.end()){
+									// Check whether all of the known characters match.
+									size_t matchSize = buffersMatchExceptUnknowns(EnglishWordLengths[i], plaintext + wordStart, EnglishWords[i]);
+									if(matchSize > englishWordMatchSizeMax){
+										// This English word matches the most plaintext letters so far.
+										englishWordMatch = i;
+										englishWordMatchSizeMax = matchSize;
+									}
 								}
-							}else if(firstContiguousKnownSize == EnglishWordLengths[i]){
+							}
+							if(firstContiguousKnownSize == EnglishWordLengths[i]){
 								// The number of letters after plaintext[wordStart] that are known
 								// is equal to the number of letters in this English word.
 								// Check whether these known letters are a word. If they are, then
@@ -239,12 +280,16 @@ int main(){
 								}
 							}
 						}
-						// If at least one match was found, use the first one.
-						// TODO: change englishWordMatches to a priority_queue with the longest match first and
-						// TODO: include English words that only match the beginning of plaintext[wordStart]
-						if(englishWordMatches.size()){
+						// Try to figure out the plaintext letter at this position.
+						if(englishWordMatchSizeMax){
 							// Overwrite this word within the plaintext with the full English word.
-							memcpy(plaintext + wordStart, EnglishWords[englishWordMatches[0]], wordSize);
+							memcpy(plaintext + wordStart, EnglishWords[englishWordMatch], EnglishWordLengths[englishWordMatch]);
+							wordEnd = wordStart + EnglishWordLengths[englishWordMatch];
+							// Add a space after the word. This covers the case where there are two unknown letters,
+							// where the first is the last letter of a word, and where the second is a space.
+							if(wordEnd < MESSAGE_LENGTH && !plaintext[wordEnd]){
+								plaintext[wordEnd] = ' ';
+							}
 						}else if(numIndicationsThatThisIsASpace){
 							// This unknown position probably is supposed to contain a space.
 							// Let's make it so.
@@ -263,6 +308,7 @@ int main(){
 							}
 							cerr << endl;
 						}
+						// At this point in the code, letters in plaintext between wordStart and wordEnd are all known.
 					}
 				}
 				// Print out our best guess.
