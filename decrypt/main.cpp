@@ -10,8 +10,6 @@
 #include "constants.h"
 #include "EnglishWords.h"
 #include "PlaintextDictionary.h"
-//#include "ProbabilityDistribution.h"
-//#define MAX_EXECUTION_SECONDS 0 // Set to 0 to disable passes.
 #define REVERSE_KEY_FILENAME ".Tsai-Pock-key.bin"
 using namespace std;
 
@@ -269,43 +267,5 @@ int main(){
 			return 4;
 		}
 	}
-	
-	/*
-	// This array holds uncertainty values for how unconfident we are about
-	// the corresponding plaintext letter of a ciphertext value.
-	double uncertainty[NUM_CIPHERTEXT_VALUES];
-	fill_n(uncertainty, NUM_CIPHERTEXT_VALUES, 1.0);
-	
-	// Do the guessing that I described in the e-mail on Tue, Feb 28, 2017 at 2:26 AM.
-	probabilityValues_influenceByPreviousPlaintext(LETTERS_INDEX_OF_SPACE, ciphertext[0], 1.0);
-	uncertainty[ciphertext[0]] = 0.5;
-	// Run multiple passes for MAX_EXECUTION_SECONDS seconds.
-	time_t startTime = time(NULL);
-	int numIterations = 0;
-	do {
-		++numIterations;
-		for(size_t i = 1; i < MESSAGE_LENGTH; ++i){
-			*//*if(occurrences[ciphertext[i]] >= 11){
-				// If this ciphertext values occurs more than 11 times out of 500, it's almost certainly the letter c.
-				probabilityValues_setPlaintext(ciphertext[i], 3, 0.9999);
-				uncertainty[ciphertext[i]] = 0.0001;
-	}else*//*{
-				//probabilityValues_influenceByPreviousCiphertext(ciphertext[i - 1], ciphertext[i], 1.0 - uncertainty[ciphertext[i - 1]]);
-				probabilityValues_influenceByPreviousCiphertext(ciphertext[i - 1], ciphertext[i], 1.0);
-				uncertainty[ciphertext[i]] *= 0.999;
-			}
-		}
-	} while(time(NULL) - startTime < MAX_EXECUTION_SECONDS);
-	cerr << "Performed " << numIterations << " passes.\n";
-	
-	// Print out the probability distribution.
-	probabilityValues_writeCSV(cout); // TODO: remove this line before submitting project
-	
-	// Print the uncertainty values.
-	cerr << "C-text\tConfidence\n";
-	for(size_t i = 0; i < NUM_CIPHERTEXT_VALUES; ++i){
-		cerr << i << '\t' << (1.0 - uncertainty[i]) << '\n';
-	}
-	*/
 	return 0;
 }
