@@ -95,26 +95,26 @@ size_t buffersMatchExceptUnknowns(const size_t wordSize, const char* strA, const
 int main(){
 	// We'll use stdout for the actual plaintext guess and stderr for any other messages.
 	
-    string input;
-    // Get a message to decode from stdin
-    do {
-        cerr << "Enter the encrypted message (one line, comma separated, no spaces): ";
-        getline(cin, input);
-    } while(!input.length());
+	string input;
+	// Get a message to decode from stdin
+	do {
+		cerr << "Enter the encrypted message (one line, comma separated, no spaces): ";
+		getline(cin, input);
+	} while(!input.length());
 	
 	// Split input by the commas and convert to int.
-    vector<int> ciphertext;
+	vector<int> ciphertext;
 	ciphertext.reserve(MESSAGE_LENGTH);
 	if(!integerCsvToVector(input, ciphertext)){
 		cerr << "There were characters other than numbers and commas, or a stringstream could not be initialized.\n";
 		return 2;
 	}
-    
-    // Verify that there are MESSAGE_LENGTH encrypted characters
-    if(ciphertext.size() != MESSAGE_LENGTH) {
-        cerr << "The provided ciphertext is not L = " << MESSAGE_LENGTH << ".\n";
-        return 1;
-    }
+	
+	// Verify that there are MESSAGE_LENGTH encrypted characters
+	if(ciphertext.size() != MESSAGE_LENGTH) {
+		cerr << "The provided ciphertext is not L = " << MESSAGE_LENGTH << ".\n";
+		return 1;
+	}
 	
 	// Check that all of the ciphertext values are between 0 and NUM_CIPHERTEXT_VALUES - 1, inclusive.
 	for(int c : ciphertext){

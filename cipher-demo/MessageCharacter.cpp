@@ -11,5 +11,5 @@ int MessageCharacter::getRandomCipherValue() const {
 }
 
 int MessageCharacter::getNextCipherValue() {
-    return keyValues[count++ % keyValues.size()];
+	return keyValues[count++ % keyValues.size()];
 }

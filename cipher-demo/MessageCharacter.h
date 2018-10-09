@@ -11,9 +11,9 @@ public:
 	// Returns a random value between cipherValueRangeStart and (cipherValueRangeStart + averageFrequency), inclusive.
 	// You should call srand before using this function.
 	int getRandomCipherValue() const;
-    int getNextCipherValue();
+	int getNextCipherValue();
 	// The default copy and move constructors will work fine for this.
 private:
 	std::vector<int> keyValues;
-    int count;
+	int count;
 };
